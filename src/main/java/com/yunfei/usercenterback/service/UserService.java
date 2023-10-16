@@ -2,7 +2,9 @@ package com.yunfei.usercenterback.service;
 
 import com.yunfei.usercenterback.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.yunfei.usercenterback.model.dto.UserLoginDto;
 import com.yunfei.usercenterback.model.dto.UserRegisterDto;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author houyunfei
@@ -17,5 +19,14 @@ public interface UserService extends IService<User> {
      * @return 用户id
      */
     long userRegister(UserRegisterDto userRegisterDto);
+
+    /**
+     * 用户登录
+     *
+     * @param userLoginDto 用户登录信息
+     * @param request
+     * @return 脱敏后的用户信息
+     */
+    User userLogin(UserLoginDto userLoginDto, HttpServletRequest request);
 
 }
