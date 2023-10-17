@@ -83,4 +83,15 @@ public class UserController {
         }
         return true;
     }
+
+    @GetMapping("/current")
+    public User gerCurrentUser(HttpServletRequest request) {
+        User user = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (user == null) {
+            return null;
+        }
+        Long userId = user.getId();
+        User user1 = userService.getById(userId);
+        return userService.getSafetyUser(user1);
+    }
 }
