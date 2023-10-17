@@ -1,6 +1,7 @@
 package com.yunfei.usercenterback.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.yunfei.usercenterback.common.UserConstant;
 import com.yunfei.usercenterback.model.domain.User;
 import com.yunfei.usercenterback.model.dto.UserLoginDto;
 import com.yunfei.usercenterback.model.dto.UserRegisterDto;
@@ -10,7 +11,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
@@ -42,19 +45,42 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    public List<User> searchUsers(String username) {
+    public List<User> searchUsers(String username, HttpServletRequest request) {
+        if (!isAdmin(request)) {
+            return new ArrayList<>();
+        }
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
         if (StringUtils.isNotBlank(username)) {
             userQueryWrapper.like("username", username);
         }
-        return userService.list(userQueryWrapper);
+        List<User> userList = userService.list(userQueryWrapper);
+        return userList.stream().map(user -> {
+            return userService.getSafetyUser(user);
+        }).collect(Collectors.toList());
     }
 
     @PostMapping("/delete/{id}")
-    public boolean deleteUser(@PathVariable Long id) {
+    public boolean deleteUser(@PathVariable Long id, HttpServletRequest request) {
+        if (!isAdmin(request)) {
+            return false;
+        }
         if (id < 0) {
             return false;
         }
         return userService.removeById(id);
+    }
+
+    /**
+     * 判断是不是管理员
+     *
+     * @return
+     */
+    private boolean isAdmin(HttpServletRequest request) {
+        //仅管理员可以查询
+        User user = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (user == null || user.getUserRole() != UserConstant.ADMIN_USER_ROLE) {
+            return false;
+        }
+        return true;
     }
 }

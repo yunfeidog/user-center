@@ -1,4 +1,5 @@
 package com.yunfei.usercenterback.service.impl;
+
 import java.util.Date;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -117,17 +118,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             return null;
         }
         //用户脱敏
+        User safetyUser = getSafetyUser(user);
+        //记录用户登录态
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
+        return safetyUser;
+    }
+
+    @Override
+    public User getSafetyUser(User user) {
         User safetyUser = new User();
         safetyUser.setId(user.getId());
         safetyUser.setUsername(user.getUsername());
-        safetyUser.setUserAccount(userAccount);
+        safetyUser.setUserAccount(user.getUserAccount());
         safetyUser.setAvatarUrl(user.getAvatarUrl());
         safetyUser.setGender(user.getGender());
         safetyUser.setPhone(user.getPhone());
         safetyUser.setEmail(user.getEmail());
         safetyUser.setUserStatus(user.getUserStatus());
-        //记录用户登录态
-        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE,user);
+        safetyUser.setUserRole(user.getUserRole());
         return safetyUser;
     }
 }

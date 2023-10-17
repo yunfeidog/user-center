@@ -75,6 +75,11 @@ public class User implements Serializable {
     @TableLogic
     private Integer isDelete;
 
+    /**
+     * 用户角色
+     */
+    private Integer userRole;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }
