@@ -1,7 +1,5 @@
 package com.yunfei.usercenterback.service.impl;
 
-import java.util.Date;
-
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yunfei.usercenterback.common.UserConstant;
@@ -12,7 +10,6 @@ import com.yunfei.usercenterback.service.UserService;
 import com.yunfei.usercenterback.mapper.UserMapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -41,13 +38,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String userAccount = userRegisterDto.getUserAccount();
         String userPassword = userRegisterDto.getUserPassword();
         String checkPassword = userRegisterDto.getCheckPassword();
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
+        String ikunCode = userRegisterDto.getIkunCode();
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword,ikunCode)) {
             return -1;
         }
         if (userAccount.length() < 4) {
             return -1;
         }
         if (userPassword.length() < 4 || checkPassword.length() < 4) {
+            return -1;
+        }
+        if (ikunCode.length()>10){
             return -1;
         }
 
@@ -69,6 +70,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (count > 0) {
             return -1;
         }
+
+        //ikunCode不能重复
+        userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.eq("ikunCode", ikunCode);
+        count = userMapper.selectCount(userQueryWrapper);
+        if (count > 0) {
+            return -1;
+        }
+
+
         //加密
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
 
@@ -76,6 +87,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
+        user.setIkunCode(ikunCode);
         int result = userMapper.insert(user);
         if (result < 1) {
             return -1;
@@ -139,7 +151,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setEmail(user.getEmail());
         safetyUser.setUserStatus(user.getUserStatus());
         safetyUser.setUserRole(user.getUserRole());
+        safetyUser.setCreateTime(user.getCreateTime());
+        safetyUser.setIkunCode(user.getIkunCode());
         return safetyUser;
+    }
+
+    @Override
+    public Integer logout(HttpServletRequest request) {
+        request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
+        return 1;
     }
 }
 

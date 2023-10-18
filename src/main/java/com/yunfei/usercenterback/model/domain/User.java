@@ -80,6 +80,11 @@ public class User implements Serializable {
      */
     private Integer userRole;
 
+    /**
+     * ikun编号
+     */
+    private String ikunCode;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

@@ -44,6 +44,14 @@ public class UserController {
         return userService.userLogin(userLoginDto, request);
     }
 
+    @PostMapping("/logout")
+    public Integer logout(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+        return userService.logout(request);
+    }
+
     @GetMapping("/search")
     public List<User> searchUsers(String username, HttpServletRequest request) {
         if (!isAdmin(request)) {
@@ -94,4 +102,6 @@ public class UserController {
         User user1 = userService.getById(userId);
         return userService.getSafetyUser(user1);
     }
+
+
 }
