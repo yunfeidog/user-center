@@ -1,7 +1,11 @@
 package com.yunfei.usercenterback.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.yunfei.usercenterback.common.Code;
+import com.yunfei.usercenterback.common.Result;
+import com.yunfei.usercenterback.common.ResultUtils;
 import com.yunfei.usercenterback.common.UserConstant;
+import com.yunfei.usercenterback.exception.BussinessException;
 import com.yunfei.usercenterback.model.domain.User;
 import com.yunfei.usercenterback.model.dto.UserLoginDto;
 import com.yunfei.usercenterback.model.dto.UserRegisterDto;
@@ -11,7 +15,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,59 +26,63 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public Long userRegister(@RequestBody UserRegisterDto userRegisterDto) {
+    public Result<Long> userRegister(@RequestBody UserRegisterDto userRegisterDto) {
         if (userRegisterDto == null) {
-            throw new RuntimeException("参数不能为空");
+            throw new BussinessException(Code.PARAMS_ERROR);
         }
         long id = userService.userRegister(userRegisterDto);
-        return id;
+        return ResultUtils.success(id);
     }
 
     @PostMapping("/login")
-    public User userLogin(@RequestBody UserLoginDto userLoginDto, HttpServletRequest request) {
+    public Result<User> userLogin(@RequestBody UserLoginDto userLoginDto, HttpServletRequest request) {
         if (userLoginDto == null) {
-            throw new RuntimeException("参数不能为空");
+            throw new BussinessException(Code.PARAMS_ERROR);
         }
         String userAccount = userLoginDto.getUserAccount();
         String userPassword = userLoginDto.getUserPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            throw new RuntimeException("用户名或密码不能为空");
+            throw new BussinessException(Code.PARAMS_ERROR);
         }
-        return userService.userLogin(userLoginDto, request);
+        User user = userService.userLogin(userLoginDto, request);
+        return ResultUtils.success(user);
     }
 
     @PostMapping("/logout")
-    public Integer logout(HttpServletRequest request) {
+    public Result<Integer> logout(HttpServletRequest request) {
         if (request == null) {
-            return null;
+            throw new BussinessException(Code.NOT_LOGIN);
         }
-        return userService.logout(request);
+        userService.logout(request);
+        return ResultUtils.success(1);
     }
 
     @GetMapping("/search")
-    public List<User> searchUsers(String username, HttpServletRequest request) {
+    public Result<List<User>> searchUsers(String username, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return new ArrayList<>();
+            throw new BussinessException(Code.NO_AUTH);
         }
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
         if (StringUtils.isNotBlank(username)) {
             userQueryWrapper.like("username", username);
         }
         List<User> userList = userService.list(userQueryWrapper);
-        return userList.stream().map(user -> {
+        List<User> users = userList.stream().map(user -> {
             return userService.getSafetyUser(user);
         }).collect(Collectors.toList());
+        return ResultUtils.success(users);
     }
 
     @PostMapping("/delete/{id}")
-    public boolean deleteUser(@PathVariable Long id, HttpServletRequest request) {
+    public Result<Boolean> deleteUser(@PathVariable Long id, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return false;
+            throw new BussinessException(Code.NO_AUTH);
         }
-        if (id < 0) {
-            return false;
+        if (id <= 0) {
+            throw new BussinessException(Code.PARAMS_ERROR);
         }
-        return userService.removeById(id);
+        boolean flag = userService.removeById(id);
+        return ResultUtils.success(flag);
     }
 
     /**
@@ -93,15 +100,14 @@ public class UserController {
     }
 
     @GetMapping("/current")
-    public User gerCurrentUser(HttpServletRequest request) {
+    public Result<User> gerCurrentUser(HttpServletRequest request) {
         User user = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         if (user == null) {
-            return null;
+            throw new BussinessException(Code.NOT_LOGIN);
         }
         Long userId = user.getId();
         User user1 = userService.getById(userId);
-        return userService.getSafetyUser(user1);
+        User safetyUser = userService.getSafetyUser(user1);
+        return ResultUtils.success(safetyUser);
     }
-
-
 }

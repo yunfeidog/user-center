@@ -2,7 +2,9 @@ package com.yunfei.usercenterback.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.yunfei.usercenterback.common.Code;
 import com.yunfei.usercenterback.common.UserConstant;
+import com.yunfei.usercenterback.exception.BussinessException;
 import com.yunfei.usercenterback.model.domain.User;
 import com.yunfei.usercenterback.model.dto.UserLoginDto;
 import com.yunfei.usercenterback.model.dto.UserRegisterDto;
@@ -39,17 +41,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String userPassword = userRegisterDto.getUserPassword();
         String checkPassword = userRegisterDto.getCheckPassword();
         String ikunCode = userRegisterDto.getIkunCode();
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword,ikunCode)) {
-            return -1;
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, ikunCode)) {
+            throw new BussinessException(Code.PARAMS_ERROR, "参数不能为空");
         }
         if (userAccount.length() < 4) {
-            return -1;
+            throw new BussinessException(Code.PARAMS_ERROR, "账户长度不能小于4");
         }
         if (userPassword.length() < 4 || checkPassword.length() < 4) {
-            return -1;
+            throw new BussinessException(Code.PARAMS_ERROR, "密码长度不能小于4");
         }
-        if (ikunCode.length()>10){
-            return -1;
+        if (ikunCode.length() > 10) {
+            throw new BussinessException(Code.PARAMS_ERROR, "ikun编号长度不能大于10");
         }
 
         //账户不能包含字符
@@ -57,18 +59,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String validPattern = "^[a-zA-Z0-9_]+$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (!matcher.find()) {
-            return -1;
+            throw new BussinessException(Code.PARAMS_ERROR, "账户不能包含特殊字符");
         }
         //密码和确认密码必须一致
         if (!userPassword.equals(checkPassword)) {
-            return -1;
+            throw new BussinessException(Code.PARAMS_ERROR, "密码和确认密码必须一致");
         }
         //账户不能重复
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
         userQueryWrapper.eq("userAccount", userAccount);
         long count = userMapper.selectCount(userQueryWrapper);
         if (count > 0) {
-            return -1;
+            throw new BussinessException(Code.PARAMS_ERROR, "账户已存在");
         }
 
         //ikunCode不能重复
@@ -76,10 +78,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         userQueryWrapper.eq("ikunCode", ikunCode);
         count = userMapper.selectCount(userQueryWrapper);
         if (count > 0) {
-            return -1;
+            throw new BussinessException(Code.PARAMS_ERROR, "ikun编号已存在");
         }
-
-
         //加密
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
 
@@ -90,7 +90,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setIkunCode(ikunCode);
         int result = userMapper.insert(user);
         if (result < 1) {
-            return -1;
+            throw new BussinessException(Code.SYSTEM_ERROR, "注册失败");
         }
         return user.getId();
     }
@@ -100,14 +100,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String userAccount = userLoginDto.getUserAccount();
         String userPassword = userLoginDto.getUserPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            //todo 修改为自定义异常
-            return null;
+            throw new BussinessException(Code.PARAMS_ERROR, "参数不能为空");
         }
         if (userAccount.length() < 4) {
-            return null;
+            throw new BussinessException(Code.PARAMS_ERROR, "账户长度不能小于4");
         }
         if (userPassword.length() < 4) {
-            return null;
+            throw new BussinessException(Code.PARAMS_ERROR, "密码长度不能小于4");
         }
 
         //账户不能包含字符
@@ -115,7 +114,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String validPattern = "^[a-zA-Z0-9_]+$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (!matcher.find()) {
-            return null;
+            throw new BussinessException(Code.PARAMS_ERROR, "账户不能包含特殊字符");
         }
 
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
@@ -127,7 +126,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = userMapper.selectOne(userQueryWrapper);
         if (user == null) {
             log.info("user login failed, userAccount cannot match userPassword");
-            return null;
+            throw new BussinessException(Code.PARAMS_ERROR, "账户或密码错误");
         }
         //用户脱敏
         User safetyUser = getSafetyUser(user);
@@ -139,7 +138,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public User getSafetyUser(User user) {
         if (user == null) {
-            return null;
+            throw new BussinessException(Code.SYSTEM_ERROR, "用户不存在");
         }
         User safetyUser = new User();
         safetyUser.setId(user.getId());
