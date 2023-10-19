@@ -8,8 +8,13 @@ spring:
     password: 12345678
   session:
     timeout: 86400
+  profiles:
+    active: prod
 server:
   port: 8080
+  servlet:
+    context-path: /api
+
 
 mybatis-plus:
   configuration:

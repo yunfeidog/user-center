@@ -10,11 +10,11 @@ import com.yunfei.usercenterback.model.domain.User;
 import com.yunfei.usercenterback.model.dto.UserLoginDto;
 import com.yunfei.usercenterback.model.dto.UserRegisterDto;
 import com.yunfei.usercenterback.service.UserService;
-import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.stream.Collectors;
 

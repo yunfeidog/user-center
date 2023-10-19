@@ -4,7 +4,8 @@ import com.yunfei.usercenterback.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yunfei.usercenterback.model.dto.UserLoginDto;
 import com.yunfei.usercenterback.model.dto.UserRegisterDto;
-import jakarta.servlet.http.HttpServletRequest;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author houyunfei

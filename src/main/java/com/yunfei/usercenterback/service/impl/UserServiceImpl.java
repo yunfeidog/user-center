@@ -10,13 +10,13 @@ import com.yunfei.usercenterback.model.dto.UserLoginDto;
 import com.yunfei.usercenterback.model.dto.UserRegisterDto;
 import com.yunfei.usercenterback.service.UserService;
 import com.yunfei.usercenterback.mapper.UserMapper;
-import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
